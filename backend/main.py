@@ -4,8 +4,8 @@ from database import engine, SessionLocal
 import models
 from models import User
 from schemas import UserCreate, UserResponse
-from models import User, Word
-from schemas import UserCreate, UserResponse, WordCreate, WordResponse
+from models import User, Word, Progress
+from schemas import UserCreate, UserResponse, WordCreate, WordResponse, ProgressCreate, ProgressResponse
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -59,3 +59,21 @@ def create_word(word: WordCreate, db: Session = Depends(get_db)):
 @app.get("/words", response_model=list[WordResponse])
 def get_words(db: Session = Depends(get_db)):
     return db.query(Word).all()
+
+@app.post("/progress", response_model=ProgressResponse)
+def create_progress(progress: ProgressCreate, db: Session = Depends(get_db)):
+    new_progress = Progress(
+        user_id=progress.user_id,
+        word_id=progress.word_id,
+        is_correct=progress.is_correct
+    )
+    db.add(new_progress)
+
+    if progress.is_correct:
+        user = db.query(User).filter(User.id == progress.user_id).first()
+        if user:
+            user.total_score += 10
+
+    db.commit()
+    db.refresh(new_progress)
+    return new_progress
