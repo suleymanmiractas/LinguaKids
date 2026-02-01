@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 from database import Base
 
 class User(Base):
@@ -20,11 +20,11 @@ class Word(Base):
     audio_url = Column(String)
 
 
+
 class Progress(Base):
     __tablename__ = "progress"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     word_id = Column(Integer, ForeignKey("words.id"))
-    correct_count = Column(Integer, default=0)
-    wrong_count = Column(Integer, default=0)
+    is_correct = Column(Boolean)
