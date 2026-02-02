@@ -18,6 +18,7 @@ class UserResponse(BaseModel):
 
 class WordCreate(BaseModel):
     word: str
+    level: int = 1
     image_url: Optional[str] = None
     audio_url: Optional[str] = None
 
@@ -25,6 +26,7 @@ class WordCreate(BaseModel):
 class WordResponse(BaseModel):
     id: int
     word: str
+    level: int
     image_url: Optional[str]
     audio_url: Optional[str]
 

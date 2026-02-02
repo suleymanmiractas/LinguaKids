@@ -18,6 +18,8 @@ class Word(Base):
     word = Column(String)
     image_url = Column(String)
     audio_url = Column(String)
+    level = Column(Integer, default=1)
+
 
 
 

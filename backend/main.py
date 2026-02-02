@@ -6,6 +6,8 @@ from models import User
 from schemas import UserCreate, UserResponse
 from models import User, Word, Progress
 from schemas import UserCreate, UserResponse, WordCreate, WordResponse, ProgressCreate, ProgressResponse
+from fastapi import HTTPException
+
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -48,6 +50,7 @@ def get_users(db: Session = Depends(get_db)):
 def create_word(word: WordCreate, db: Session = Depends(get_db)):
     new_word = Word(
         word=word.word,
+        level=word.level,
         image_url=word.image_url,
         audio_url=word.audio_url
     )
@@ -62,6 +65,12 @@ def get_words(db: Session = Depends(get_db)):
 
 @app.post("/progress", response_model=ProgressResponse)
 def create_progress(progress: ProgressCreate, db: Session = Depends(get_db)):
+    # kullanıcıyı başta çek
+    user = db.query(User).filter(User.id == progress.user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
     new_progress = Progress(
         user_id=progress.user_id,
         word_id=progress.word_id,
@@ -70,10 +79,14 @@ def create_progress(progress: ProgressCreate, db: Session = Depends(get_db)):
     db.add(new_progress)
 
     if progress.is_correct:
-        user = db.query(User).filter(User.id == progress.user_id).first()
-        if user:
-            user.total_score += 10
+        user.total_score += 10
+        user.level = (user.total_score // 30) + 1
 
     db.commit()
     db.refresh(new_progress)
     return new_progress
+
+
+@app.get("/words/by-level/{level}", response_model=list[WordResponse])
+def get_words_by_level(level: int, db: Session = Depends(get_db)):
+    return db.query(Word).filter(Word.level <= level).all()
