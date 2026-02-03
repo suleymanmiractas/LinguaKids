@@ -6,6 +6,7 @@ from models import User
 from schemas import UserCreate, UserResponse
 from models import User, Word, Progress
 from schemas import UserCreate, UserResponse, WordCreate, WordResponse, ProgressCreate, ProgressResponse
+import random
 from fastapi import HTTPException
 
 
@@ -90,3 +91,23 @@ def create_progress(progress: ProgressCreate, db: Session = Depends(get_db)):
 @app.get("/words/by-level/{level}", response_model=list[WordResponse])
 def get_words_by_level(level: int, db: Session = Depends(get_db)):
     return db.query(Word).filter(Word.level <= level).all()
+
+
+@app.get("/words/random", response_model=list[WordResponse])
+def get_random_words(user_id: int, limit: int = 5, db: Session = Depends(get_db)):
+    # kullanıcıyı bul
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # kullanıcı seviyesine uygun kelimeler
+    words = db.query(Word).filter(Word.level <= user.level).all()
+
+    if not words:
+        return []
+
+    # karıştır
+    random.shuffle(words)
+
+    # limit kadar döndür
+    return words[:limit]
