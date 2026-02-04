@@ -1,0 +1,58 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+}
+
+.container {
+  width: 300px;
+  margin: 50px auto;
+  text-align: center;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+#game-box {
+  margin: 20px 0;
+  font-size: 24px;
+}
+
+.buttons button {
+  font-size: 16px;
+  padding: 10px;
+  margin: 5px;
+  width: 100px;
+}
+
+.correct {
+  color: green;
+  animation: pop 0.4s ease;
+}
+
+.wrong {
+  color: red;
+  animation: shake 0.4s;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.8); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  100% { transform: translateX(0); }
+}
+
+#restartBtn {
+  margin-top: 15px;
+  padding: 10px;
+  font-size: 16px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}

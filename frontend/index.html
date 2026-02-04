@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>LinguaKids</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="container">
+    <h1>LinguaKids 🎮</h1>
+
+    <div id="user-info">
+      <p>Level: <span id="level">-</span></p>
+      <p>Puan: <span id="score">-</span></p>
+    </div>
+
+    <div id="game-box">
+      <h2 id="word">Kelime yükleniyor...</h2>
+    </div>
+
+    <div class="buttons">
+      <button onclick="answer(true)">✅ Doğru</button>
+      <button onclick="answer(false)">❌ Yanlış</button>
+    </div>
+    <button id="restartBtn" onclick="restartGame()" style="display:none;">
+  🔁 Yeni Tur Başla
+</button>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

@@ -22,7 +22,6 @@ class Word(Base):
 
 
 
-
 class Progress(Base):
     __tablename__ = "progress"
 

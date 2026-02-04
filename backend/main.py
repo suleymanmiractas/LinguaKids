@@ -8,12 +8,22 @@ from models import User, Word, Progress
 from schemas import UserCreate, UserResponse, WordCreate, WordResponse, ProgressCreate, ProgressResponse
 import random
 from fastapi import HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="LinguaKids API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 
 def get_db():
@@ -100,14 +110,34 @@ def get_random_words(user_id: int, limit: int = 5, db: Session = Depends(get_db)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # kullanıcı seviyesine uygun kelimeler
-    words = db.query(Word).filter(Word.level <= user.level).all()
+    # kullanıcının çözdüğü kelimeler
+    solved_word_ids = (
+        db.query(Progress.word_id)
+        .filter(Progress.user_id == user_id)
+        .distinct()
+        .all()
+    )
+    solved_word_ids = [w[0] for w in solved_word_ids]
+
+    # çözülmemiş ve level'a uygun kelimeler
+    words = (
+        db.query(Word)
+        .filter(Word.level <= user.level)
+        .filter(~Word.id.in_(solved_word_ids))
+        .all()
+    )
 
     if not words:
         return []
 
-    # karıştır
     random.shuffle(words)
-
-    # limit kadar döndür
     return words[:limit]
+
+
+@app.post("/progress/reset")
+def reset_progress(user_id: int, db: Session = Depends(get_db)):
+    # kullanıcının tüm progress kayıtlarını sil
+    db.query(Progress).filter(Progress.user_id == user_id).delete()
+    db.commit()
+
+    return {"message": "Progress resetlendi"}
