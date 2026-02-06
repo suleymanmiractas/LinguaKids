@@ -1,0 +1,13 @@
+[
+  { "word": "apple", "level": 1 },
+  { "word": "cat", "level": 1 },
+  { "word": "dog", "level": 1 },
+  { "word": "house", "level": 1 },
+
+  { "word": "banana", "level": 2 },
+  { "word": "orange", "level": 2 },
+  { "word": "grape", "level": 2 },
+
+  { "word": "pineapple", "level": 3 },
+  { "word": "elephant", "level": 3 }
+]

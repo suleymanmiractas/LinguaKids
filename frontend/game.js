@@ -27,31 +27,28 @@ async function loadWords() {
 
 // sıradaki kelime
 function nextWord() {
-      const wordEl = document.getElementById("word");
+  const wordEl = document.getElementById("word");
   const restartBtn = document.getElementById("restartBtn");
 
   if (words.length === 0) {
     wordEl.innerText = "🎉 Tebrikler!\nBu turu bitirdin!";
     restartBtn.style.display = "block";
+    currentWord = null;
     return;
   }
 
   restartBtn.style.display = "none";
   currentWord = words.pop();
   wordEl.innerText = currentWord.word;
-  
 }
 
-// cevap gönder + animasyon
+// cevap gönder
 async function answer(isCorrect) {
   if (!currentWord) return;
 
   const wordEl = document.getElementById("word");
-
-  // animasyon class ekle
   wordEl.className = isCorrect ? "correct" : "wrong";
 
-  // backend'e cevabı gönder
   await fetch(`${API_URL}/progress`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -62,20 +59,15 @@ async function answer(isCorrect) {
     })
   });
 
-  // kullanıcı bilgilerini güncelle
   await loadUser();
 
-  // animasyon süresi kadar bekle
   setTimeout(() => {
-    wordEl.className = ""; // class temizle
-    nextWord();            // sıradaki kelime
-  }, 500);
+    wordEl.className = "";
+    nextWord();
+  }, 400);
 }
 
-// ilk yükleme
-loadUser();
-loadWords();
-
+// yeni tur
 async function restartGame() {
   const wordEl = document.getElementById("word");
   const restartBtn = document.getElementById("restartBtn");
@@ -83,12 +75,13 @@ async function restartGame() {
   wordEl.innerText = "⏳ Yeni tur başlıyor...";
   restartBtn.style.display = "none";
 
-  // backend'te progress'i sıfırla
   await fetch(`${API_URL}/progress/reset?user_id=${USER_ID}`, {
     method: "POST"
   });
 
-  // kelimeleri yeniden çek
   await loadWords();
 }
 
+// ilk yükleme
+loadUser();
+loadWords();

@@ -9,6 +9,8 @@ from schemas import UserCreate, UserResponse, WordCreate, WordResponse, Progress
 import random
 from fastapi import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import and_
+import random
 
 
 
@@ -103,9 +105,12 @@ def get_words_by_level(level: int, db: Session = Depends(get_db)):
     return db.query(Word).filter(Word.level <= level).all()
 
 
+
+
+import random
+
 @app.get("/words/random", response_model=list[WordResponse])
 def get_random_words(user_id: int, limit: int = 5, db: Session = Depends(get_db)):
-    # kullanıcıyı bul
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -119,11 +124,13 @@ def get_random_words(user_id: int, limit: int = 5, db: Session = Depends(get_db)
     )
     solved_word_ids = [w[0] for w in solved_word_ids]
 
-    # çözülmemiş ve level'a uygun kelimeler
+    # çözülmemiş + level'a uygun kelimeler
     words = (
         db.query(Word)
-        .filter(Word.level <= user.level)
-        .filter(~Word.id.in_(solved_word_ids))
+        .filter(
+            Word.level <= user.level,
+            ~Word.id.in_(solved_word_ids)
+        )
         .all()
     )
 
@@ -134,6 +141,8 @@ def get_random_words(user_id: int, limit: int = 5, db: Session = Depends(get_db)
     return words[:limit]
 
 
+
+
 @app.post("/progress/reset")
 def reset_progress(user_id: int, db: Session = Depends(get_db)):
     # kullanıcının tüm progress kayıtlarını sil
@@ -141,3 +150,35 @@ def reset_progress(user_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Progress resetlendi"}
+
+
+import json
+from pathlib import Path
+
+@app.post("/words/bulk-load")
+def bulk_load_words(db: Session = Depends(get_db)):
+    file_path = Path("words_data.json")
+
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="words_data.json bulunamadı")
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        words = json.load(f)
+
+    added = 0
+    for item in words:
+        exists = db.query(Word).filter(Word.word == item["word"]).first()
+        if exists:
+            continue
+
+        word = Word(
+            word=item["word"],
+            level=item["level"],
+            image_url=None,
+            audio_url=None
+        )
+        db.add(word)
+        added += 1
+
+    db.commit()
+    return {"added_words": added}
