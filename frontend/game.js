@@ -85,3 +85,20 @@ async function restartGame() {
 // ilk yükleme
 loadUser();
 loadWords();
+
+
+function setTheme(theme) {
+  document.body.className = `theme-${theme}`;
+  localStorage.setItem("theme", theme);
+}
+
+const savedTheme = localStorage.getItem("theme");
+if (savedTheme) {
+  document.body.className = `theme-${savedTheme}`;
+} else {
+  document.body.className = "theme-light";
+}
+
+window.setTheme = setTheme;
+window.answer = answer;
+window.restartGame = restartGame;

@@ -4,21 +4,38 @@
   <meta charset="UTF-8" />
   <title>LinguaKids</title>
   <link rel="stylesheet" href="style.css" />
+
+ 
 </head>
 <body>
 
   <div class="container">
     <h1>LinguaKids 🎮</h1>
+     <div class="theme-switcher">
+  <button onclick="setTheme('light')">☀️</button>
+  <button onclick="setTheme('dark')">🌙</button>
+  <button onclick="setTheme('kids')">🌈</button>
+</div>
 
     <div id="user-info">
       <p>Level: <span id="level">-</span></p>
       <p>Puan: <span id="score">-</span></p>
     </div>
 
-    <div id="game-box" class="card">
+   <div id="game-box" class="card">
+
+  <!-- Görsel Alan -->
+  <div class="image-box">
+    🖼️
+  </div>
+
+  <!-- Kelime -->
   <h2 id="word">Kelime yükleniyor...</h2>
+
+  <!-- Geri Bildirim -->
   <p id="feedback"></p>
 </div>
+
 
 
     <div class="buttons">
@@ -31,5 +48,9 @@
   </div>
 
   <script src="game.js"></script>
+
+
+
+  
 </body>
 </html>
