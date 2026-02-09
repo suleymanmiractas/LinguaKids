@@ -9,48 +9,55 @@
 </head>
 <body>
 
-  <div class="container">
-    <h1>LinguaKids 🎮</h1>
-     <div class="theme-switcher">
-  <button onclick="setTheme('light')">☀️</button>
-  <button onclick="setTheme('dark')">🌙</button>
-  <button onclick="setTheme('kids')">🌈</button>
-</div>
-
-    <div id="user-info">
-      <p>Level: <span id="level">-</span></p>
-      <p>Puan: <span id="score">-</span></p>
-    </div>
-
-   <div id="game-box" class="card">
-
-  <!-- Görsel Alan -->
-  <div class="image-box">
-    🖼️
+  <!-- HOŞ GELDİNİZ EKRANI -->
+  <div id="welcome-screen" class="screen active bg-welcome">
+    <h1 class="logo">LinguaKids 🎮</h1>
+    <p class="subtitle">Eğlenerek Dil Öğren</p>
   </div>
 
-  <!-- Kelime -->
-  <h2 id="word">Kelime yükleniyor...</h2>
+  <!-- MENÜ EKRANI -->
+  <div id="menu-screen" class="screen bg-welcome">
+    <h2>Menü</h2>
+    <button onclick="startGame()">▶ Oyna</button>
+    <button onclick="openSettings()">⚙ Ayarlar</button>
+  </div>
 
-  <!-- Geri Bildirim -->
-  <p id="feedback"></p>
-</div>
+  <!-- OYUN EKRANI (MEVCUT UYGULAMAN) -->
+  <div id="game-screen" class="screen">
 
+    <div class="container">
+      <h1>LinguaKids 🎮</h1>
 
+      <div class="theme-switcher">
+        <button onclick="setTheme('light')">☀️</button>
+        <button onclick="setTheme('dark')">🌙</button>
+        <button onclick="setTheme('kids')">🌈</button>
+      </div>
 
-    <div class="buttons">
-      <button onclick="answer(true)">✅ Doğru</button>
-      <button onclick="answer(false)">❌ Yanlış</button>
+      <div id="user-info">
+        <p>⭐ Level: <span id="level">-</span></p>
+        <p>🔥 Puan: <span id="score">-</span></p>
+      </div>
+
+      <div id="game-box" class="card">
+        <div class="image-box">🖼️</div>
+        <h2 id="word">Kelime yükleniyor...</h2>
+        <p id="feedback"></p>
+      </div>
+
+      <div class="buttons">
+        <button onclick="answer(true)">✅ Doğru</button>
+        <button onclick="answer(false)">❌ Yanlış</button>
+      </div>
+
+      <button id="restartBtn" onclick="restartGame()" style="display:none;">
+        🔁 Yeni Tur Başla
+      </button>
     </div>
-    <button id="restartBtn" onclick="restartGame()" style="display:none;">
-  🔁 Yeni Tur Başla
-</button>
+
   </div>
 
   <script src="game.js"></script>
-
-
-
-  
 </body>
+
 </html>

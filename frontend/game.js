@@ -102,3 +102,29 @@ if (savedTheme) {
 window.setTheme = setTheme;
 window.answer = answer;
 window.restartGame = restartGame;
+
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+// Açılış animasyonu → menü
+setTimeout(() => {
+  showScreen("menu-screen");
+}, 1800);
+
+// Menü → oyun
+function startGame() {
+  showScreen("game-screen");
+  loadUser();
+  loadWords();
+}
+
+// Ayarlar (şimdilik placeholder)
+function openSettings() {
+  alert("Ayarlar yakında 👑");
+}
+
+/* GLOBAL BAĞLANTILAR */
+window.startGame = startGame;
+window.openSettings = openSettings;
