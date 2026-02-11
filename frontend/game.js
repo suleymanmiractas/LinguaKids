@@ -4,7 +4,9 @@ const USER_ID = 1;
 let words = [];
 let currentWord = null;
 
-// kullanıcı bilgisini çek
+/* =========================
+   KULLANICI YÜKLE
+========================= */
 async function loadUser() {
   const res = await fetch(`${API_URL}/users`);
   const data = await res.json();
@@ -16,7 +18,9 @@ async function loadUser() {
   document.getElementById("score").innerText = user.total_score;
 }
 
-// kelimeleri çek
+/* =========================
+   KELİMELERİ ÇEK
+========================= */
 async function loadWords() {
   const res = await fetch(
     `${API_URL}/words/random?user_id=${USER_ID}&limit=5`
@@ -25,10 +29,29 @@ async function loadWords() {
   nextWord();
 }
 
-// sıradaki kelime
+/* =========================
+   KELİME MASKELE
+========================= */
+function maskWord(word) {
+  return word
+    .split("")
+    .map((letter, index) =>
+      index % 2 === 0 ? letter : "_"
+    )
+    .join(" ");
+}
+
+/* =========================
+   SIRADAKİ KELİME
+========================= */
 function nextWord() {
   const wordEl = document.getElementById("word");
   const restartBtn = document.getElementById("restartBtn");
+  const input = document.getElementById("answerInput");
+  const feedback = document.getElementById("feedback");
+
+  feedback.innerText = "";
+  input.value = "";
 
   if (words.length === 0) {
     wordEl.innerText = "🎉 Tebrikler!\nBu turu bitirdin!";
@@ -39,35 +62,57 @@ function nextWord() {
 
   restartBtn.style.display = "none";
   currentWord = words.pop();
-  wordEl.innerText = currentWord.word;
+
+  wordEl.innerText = maskWord(currentWord.word);
 }
 
-// cevap gönder
-async function answer(isCorrect) {
+/* =========================
+   CEVAP KONTROL
+========================= */
+async function checkAnswer() {
   if (!currentWord) return;
 
+  const inputEl = document.getElementById("answerInput");
+  const feedback = document.getElementById("feedback");
   const wordEl = document.getElementById("word");
-  wordEl.className = isCorrect ? "correct" : "wrong";
 
-  await fetch(`${API_URL}/progress`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      user_id: USER_ID,
-      word_id: currentWord.id,
-      is_correct: isCorrect
-    })
-  });
+  const input = inputEl.value.trim().toLowerCase();
+  const correctWord = currentWord.word.toLowerCase();
 
-  await loadUser();
+  if (input === correctWord) {
+    feedback.innerText = "🎉 Doğru! +10";
+    wordEl.classList.add("correct");
 
-  setTimeout(() => {
-    wordEl.className = "";
-    nextWord();
-  }, 400);
+    await fetch(`${API_URL}/progress`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: USER_ID,
+        word_id: currentWord.id,
+        is_correct: true
+      })
+    });
+
+    await loadUser();
+
+    setTimeout(() => {
+      wordEl.classList.remove("correct");
+      nextWord();
+    }, 600);
+
+  } else {
+    feedback.innerText = "❌ Yanlış, tekrar dene!";
+    wordEl.classList.add("wrong");
+
+    setTimeout(() => {
+      wordEl.classList.remove("wrong");
+    }, 400);
+  }
 }
 
-// yeni tur
+/* =========================
+   YENİ TUR
+========================= */
 async function restartGame() {
   const wordEl = document.getElementById("word");
   const restartBtn = document.getElementById("restartBtn");
@@ -82,11 +127,9 @@ async function restartGame() {
   await loadWords();
 }
 
-// ilk yükleme
-loadUser();
-loadWords();
-
-
+/* =========================
+   TEMA SİSTEMİ
+========================= */
 function setTheme(theme) {
   document.body.className = `theme-${theme}`;
   localStorage.setItem("theme", theme);
@@ -99,32 +142,42 @@ if (savedTheme) {
   document.body.className = "theme-light";
 }
 
-window.setTheme = setTheme;
-window.answer = answer;
-window.restartGame = restartGame;
-
+/* =========================
+   EKRAN SİSTEMİ
+========================= */
 function showScreen(id) {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".screen").forEach(s =>
+    s.classList.remove("active")
+  );
   document.getElementById(id).classList.add("active");
 }
 
-// Açılış animasyonu → menü
+// Açılış → Menü
 setTimeout(() => {
   showScreen("menu-screen");
 }, 1800);
 
-// Menü → oyun
+// Menü → Oyun
 function startGame() {
   showScreen("game-screen");
   loadUser();
   loadWords();
 }
 
-// Ayarlar (şimdilik placeholder)
 function openSettings() {
   alert("Ayarlar yakında 👑");
 }
 
-/* GLOBAL BAĞLANTILAR */
+/* =========================
+   GLOBAL BAĞLANTILAR
+========================= */
 window.startGame = startGame;
 window.openSettings = openSettings;
+window.restartGame = restartGame;
+window.setTheme = setTheme;
+window.checkAnswer = checkAnswer;
+
+/* =========================
+   İLK YÜKLEME
+========================= */
+loadUser();

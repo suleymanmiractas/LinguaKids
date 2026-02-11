@@ -45,10 +45,11 @@
         <p id="feedback"></p>
       </div>
 
-      <div class="buttons">
-        <button onclick="answer(true)">✅ Doğru</button>
-        <button onclick="answer(false)">❌ Yanlış</button>
-      </div>
+      <div class="input-area">
+  <input type="text" id="answerInput" placeholder="Cevabı yaz..." />
+  <button onclick="checkAnswer()">Tamam</button>
+</div>
+
 
       <button id="restartBtn" onclick="restartGame()" style="display:none;">
         🔁 Yeni Tur Başla
