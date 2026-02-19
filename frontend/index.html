@@ -39,6 +39,10 @@
         <p>🔥 Puan: <span id="score">-</span></p>
       </div>
 
+      <div class="xp-container">
+       <div class="xp-bar" id="xpBar"></div>
+      </div>
+
       <div id="game-box" class="card">
         <div class="image-box">🖼️</div>
         <h2 id="word">Kelime yükleniyor...</h2>
@@ -46,9 +50,9 @@
       </div>
 
       <div class="input-area">
-  <input type="text" id="answerInput" placeholder="Cevabı yaz..." />
-  <button onclick="checkAnswer()">Tamam</button>
-</div>
+       <input type="text" id="answerInput" placeholder="Cevabı yaz..." />
+       <button type="button" id="submitBtn">Tamam</button>
+      </div>
 
 
       <button id="restartBtn" onclick="restartGame()" style="display:none;">

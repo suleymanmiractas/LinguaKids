@@ -14,8 +14,25 @@ async function loadUser() {
   const user = data.find(u => u.id === USER_ID);
   if (!user) return;
 
-  document.getElementById("level").innerText = user.level;
-  document.getElementById("score").innerText = user.total_score;
+  const levelEl = document.getElementById("level");
+  const scoreEl = document.getElementById("score");
+  const xpBar = document.getElementById("xpBar");
+
+  levelEl.innerText = user.level;
+  scoreEl.innerText = user.total_score;
+
+  // XP hesaplama (30 puanda level atlıyor)
+  const xpInLevel = user.total_score % 30;
+  const percent = (xpInLevel / 30) * 100;
+  xpBar.style.width = percent + "%";
+
+  // Seviye atladı mı kontrol
+  if (xpInLevel === 0 && user.total_score !== 0) {
+    levelEl.classList.add("level-up");
+    setTimeout(() => {
+      levelEl.classList.remove("level-up");
+    }, 600);
+  }
 }
 
 /* =========================
@@ -175,9 +192,22 @@ window.startGame = startGame;
 window.openSettings = openSettings;
 window.restartGame = restartGame;
 window.setTheme = setTheme;
-window.checkAnswer = checkAnswer;
+
 
 /* =========================
    İLK YÜKLEME
 ========================= */
 loadUser();
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("submitBtn")
+    .addEventListener("click", checkAnswer);
+
+  document.getElementById("answerInput")
+    .addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        checkAnswer();
+      }
+    });
+});
