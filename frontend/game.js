@@ -3,6 +3,8 @@ const USER_ID = 1;
 
 let words = [];
 let currentWord = null;
+let streak = 0;
+let previousLevel = 1;
 
 /* =========================
    KULLANICI YÜKLE
@@ -21,12 +23,29 @@ async function loadUser() {
   levelEl.innerText = user.level;
   scoreEl.innerText = user.total_score;
 
-  // XP hesaplama (30 puanda level atlıyor)
+  // 🔥 LEVEL UP MODAL KONTROLÜ
+  if (user.level > previousLevel) {
+    showLevelUpModal(user.level);
+    previousLevel = user.level;
+  }
+
+  // 🔓 MOD UNLOCK KONTROLÜ
+  if (user.level >= 5) {
+    const matchingBtn = document.getElementById("matchingBtn");
+    if (matchingBtn) matchingBtn.style.display = "block";
+  }
+
+  if (user.level >= 10) {
+    const voiceBtn = document.getElementById("voiceBtn");
+    if (voiceBtn) voiceBtn.style.display = "block";
+  }
+
+  // XP BAR
   const xpInLevel = user.total_score % 30;
   const percent = (xpInLevel / 30) * 100;
   xpBar.style.width = percent + "%";
 
-  // Seviye atladı mı kontrol
+  // LEVEL ANİMASYONU
   if (xpInLevel === 0 && user.total_score !== 0) {
     levelEl.classList.add("level-up");
     setTimeout(() => {
@@ -79,7 +98,6 @@ function nextWord() {
 
   restartBtn.style.display = "none";
   currentWord = words.pop();
-
   wordEl.innerText = maskWord(currentWord.word);
 }
 
@@ -97,7 +115,14 @@ async function checkAnswer() {
   const correctWord = currentWord.word.toLowerCase();
 
   if (input === correctWord) {
-    feedback.innerText = "🎉 Doğru! +10";
+
+    // 🔥 STREAK ARTIR
+    streak++;
+
+    let baseXP = 10;
+    let bonusXP = baseXP + (streak * 2);
+
+    feedback.innerText = `🎉 Doğru! +${bonusXP} XP 🔥 x${streak}`;
     wordEl.classList.add("correct");
 
     await fetch(`${API_URL}/progress`, {
@@ -106,7 +131,8 @@ async function checkAnswer() {
       body: JSON.stringify({
         user_id: USER_ID,
         word_id: currentWord.id,
-        is_correct: true
+        is_correct: true,
+        xp: bonusXP
       })
     });
 
@@ -118,7 +144,11 @@ async function checkAnswer() {
     }, 600);
 
   } else {
-    feedback.innerText = "❌ Yanlış, tekrar dene!";
+
+    // ❌ STREAK SIFIRLA
+    streak = 0;
+
+    feedback.innerText = "❌ Yanlış! Streak sıfırlandı.";
     wordEl.classList.add("wrong");
 
     setTimeout(() => {
@@ -136,6 +166,7 @@ async function restartGame() {
 
   wordEl.innerText = "⏳ Yeni tur başlıyor...";
   restartBtn.style.display = "none";
+  streak = 0;
 
   await fetch(`${API_URL}/progress/reset?user_id=${USER_ID}`, {
     method: "POST"
@@ -153,11 +184,7 @@ function setTheme(theme) {
 }
 
 const savedTheme = localStorage.getItem("theme");
-if (savedTheme) {
-  document.body.className = `theme-${savedTheme}`;
-} else {
-  document.body.className = "theme-light";
-}
+document.body.className = savedTheme ? `theme-${savedTheme}` : "theme-light";
 
 /* =========================
    EKRAN SİSTEMİ
@@ -169,12 +196,10 @@ function showScreen(id) {
   document.getElementById(id).classList.add("active");
 }
 
-// Açılış → Menü
 setTimeout(() => {
   showScreen("menu-screen");
 }, 1800);
 
-// Menü → Oyun
 function startGame() {
   showScreen("game-screen");
   loadUser();
@@ -193,7 +218,6 @@ window.openSettings = openSettings;
 window.restartGame = restartGame;
 window.setTheme = setTheme;
 
-
 /* =========================
    İLK YÜKLEME
 ========================= */
@@ -211,3 +235,25 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 });
+
+function showLevelUpModal(level) {
+  const modal = document.getElementById("levelModal");
+  const message = document.getElementById("levelMessage");
+
+  let unlockText = "";
+
+  if (level >= 10) {
+    unlockText = "🎤 Yeni mod açıldı: SESLİ KOMUT!";
+  } else if (level >= 5) {
+    unlockText = "🧩 Yeni mod açıldı: EŞLEŞTİRME!";
+  } else {
+    unlockText = "Harika gidiyorsun!";
+  }
+
+  message.innerText = `Level ${level} oldun!\n${unlockText}`;
+  modal.style.display = "flex";
+}
+
+function closeLevelModal() {
+  document.getElementById("levelModal").style.display = "none";
+}

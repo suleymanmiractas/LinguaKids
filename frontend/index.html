@@ -19,6 +19,8 @@
   <div id="menu-screen" class="screen bg-welcome">
     <h2>Menü</h2>
     <button onclick="startGame()">▶ Oyna</button>
+    <button id="matchingBtn" style="display:none;">🧩 Eşleştirme</button>
+    <button id="voiceBtn" style="display:none;">🎤 Sesli Komut</button>
     <button onclick="openSettings()">⚙ Ayarlar</button>
   </div>
 
@@ -63,6 +65,15 @@
   </div>
 
   <script src="game.js"></script>
+
+<!-- LEVEL UP MODAL -->
+<div id="levelModal" class="modal">
+  <div class="modal-content">
+    <h2 id="levelTitle">🎉 Level Up!</h2>
+    <p id="levelMessage"></p>
+    <button onclick="closeLevelModal()">Tamam</button>
+  </div>
+</div>
 </body>
 
 </html>
