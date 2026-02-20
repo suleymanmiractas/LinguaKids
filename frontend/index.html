@@ -19,6 +19,9 @@
   <div id="menu-screen" class="screen bg-welcome">
     <h2>Menü</h2>
     <button onclick="startGame()">▶ Oyna</button>
+    <button id="matchingBtn" style="display:none;" onclick="startMatching()">
+    🧩 Eşleştirme
+  </button>
     <button id="matchingBtn" style="display:none;">🧩 Eşleştirme</button>
     <button id="voiceBtn" style="display:none;">🎤 Sesli Komut</button>
     <button onclick="openSettings()">⚙ Ayarlar</button>
@@ -65,6 +68,22 @@
   </div>
 
   <script src="game.js"></script>
+
+  <!-- MATCHING SCREEN -->
+<div id="matching-screen" class="screen">
+
+  <div class="container">
+    <h1>🧩 Eşleştirme Modu</h1>
+
+    <div class="matching-area">
+      <div id="leftColumn" class="column"></div>
+      <div id="rightColumn" class="column"></div>
+    </div>
+
+    <button onclick="showScreen('menu-screen')">⬅ Menü</button>
+  </div>
+
+</div>
 
 <!-- LEVEL UP MODAL -->
 <div id="levelModal" class="modal">

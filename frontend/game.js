@@ -257,3 +257,67 @@ function showLevelUpModal(level) {
 function closeLevelModal() {
   document.getElementById("levelModal").style.display = "none";
 }
+
+function startMatching() {
+  showScreen("matching-screen");
+  loadMatchingWords();
+}
+
+async function loadMatchingWords() {
+  const res = await fetch(
+    `${API_URL}/words/random?user_id=${USER_ID}&limit=3`
+  );
+  const data = await res.json();
+
+  const left = document.getElementById("leftColumn");
+  const right = document.getElementById("rightColumn");
+
+  left.innerHTML = "";
+  right.innerHTML = "";
+
+  const shuffled = [...data].sort(() => Math.random() - 0.5);
+
+  data.forEach(word => {
+    const item = document.createElement("div");
+    item.className = "card-item";
+    item.innerText = word.word;
+    item.draggable = true;
+    item.dataset.id = word.id;
+
+    item.addEventListener("dragstart", dragStart);
+    left.appendChild(item);
+  });
+
+  shuffled.forEach(word => {
+    const zone = document.createElement("div");
+    zone.className = "drop-zone";
+    zone.innerText = word.word; // şimdilik aynı kelime kullanıyoruz
+    zone.dataset.id = word.id;
+
+    zone.addEventListener("dragover", dragOver);
+    zone.addEventListener("drop", dropItem);
+
+    right.appendChild(zone);
+  });
+}
+
+function dragStart(e) {
+  e.dataTransfer.setData("text/plain", e.target.dataset.id);
+}
+
+function dragOver(e) {
+  e.preventDefault();
+}
+
+function dropItem(e) {
+  e.preventDefault();
+  const draggedId = e.dataTransfer.getData("text/plain");
+  const targetId = e.target.dataset.id;
+
+  if (draggedId === targetId) {
+    e.target.style.background = "#c8f7c5";
+    e.target.innerText = "✅ Doğru!";
+  } else {
+    e.target.style.background = "#f7c5c5";
+  }
+}
