@@ -85,6 +85,7 @@ function nextWord() {
   const restartBtn = document.getElementById("restartBtn");
   const input = document.getElementById("answerInput");
   const feedback = document.getElementById("feedback");
+  const img = document.getElementById("wordImage");
 
   feedback.innerText = "";
   input.value = "";
@@ -98,7 +99,16 @@ function nextWord() {
 
   restartBtn.style.display = "none";
   currentWord = words.pop();
+
   wordEl.innerText = maskWord(currentWord.word);
+
+  const wordName = currentWord.word.toLowerCase();
+  img.src = API_URL + "/assets/words/" + wordName + ".jpg";
+
+ img.onerror = function() {
+  img.onerror = null; // 🔥 loop'u engeller
+  img.src = API_URL + "/assets/default.jpg";
+};
 }
 
 /* =========================
@@ -163,10 +173,15 @@ async function checkAnswer() {
 async function restartGame() {
   const wordEl = document.getElementById("word");
   const restartBtn = document.getElementById("restartBtn");
+  const feedback = document.getElementById("feedback");
 
+  feedback.innerText = "";
   wordEl.innerText = "⏳ Yeni tur başlıyor...";
   restartBtn.style.display = "none";
-  streak = 0;
+
+  words = [];          // 🔥 ÖNEMLİ
+  currentWord = null;  // 🔥 ÖNEMLİ
+  streak = 0;          // combo reset
 
   await fetch(`${API_URL}/progress/reset?user_id=${USER_ID}`, {
     method: "POST"
@@ -249,6 +264,13 @@ function showLevelUpModal(level) {
   } else {
     unlockText = "Harika gidiyorsun!";
   }
+
+  if (level === 5) {
+  setTimeout(() => {
+    closeLevelModal();
+    startMatching();
+  }, 2000);
+}
 
   message.innerText = `Level ${level} oldun!\n${unlockText}`;
   modal.style.display = "flex";

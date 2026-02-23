@@ -11,12 +11,21 @@ from fastapi import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import and_
 import random
+from fastapi.staticfiles import StaticFiles
+import os
+
 
 
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="LinguaKids API")
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+assets_path = os.path.join(BASE_DIR, "..", "frontend", "assets")
+
+app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
 
 app.add_middleware(
     CORSMiddleware,
