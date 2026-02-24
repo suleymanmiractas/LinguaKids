@@ -4,7 +4,7 @@ const USER_ID = 1;
 let words = [];
 let currentWord = null;
 let streak = 0;
-let previousLevel = 1;
+let previousLevel = null;
 
 /* =========================
    KULLANICI YÜKLE
@@ -25,9 +25,17 @@ async function loadUser() {
 
   // 🔥 LEVEL UP MODAL KONTROLÜ
   if (user.level > previousLevel) {
-    showLevelUpModal(user.level);
-    previousLevel = user.level;
+
+  if (user.level >= 7) {
+    setTimeout(() => {
+      startMatching();
+    }, 800);
   }
+
+  if (previousLevel === null) {
+  previousLevel = user.level;
+}
+}
 
   // 🔓 MOD UNLOCK KONTROLÜ
   if (user.level >= 5) {
@@ -102,11 +110,14 @@ function nextWord() {
 
   wordEl.innerText = maskWord(currentWord.word);
 
-  const wordName = currentWord.word.toLowerCase();
-  img.src = API_URL + "/assets/words/" + wordName + ".jpg";
+const wordName = currentWord.word
+  .toLowerCase()
+  .replace(/\s+/g, "_");
 
- img.onerror = function() {
-  img.onerror = null; // 🔥 loop'u engeller
+img.src = API_URL + "/assets/words/" + wordName + ".jpg";
+
+img.onerror = function() {
+  img.onerror = null;
   img.src = API_URL + "/assets/default.jpg";
 };
 }
