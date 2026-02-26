@@ -576,3 +576,14 @@ body.theme-light #game-screen {
   position: relative;
   z-index: 2;
 }
+
+.matched {
+  animation: fadeOutMatch 0.4s ease forwards;
+}
+
+@keyframes fadeOutMatch {
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}

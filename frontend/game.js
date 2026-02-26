@@ -26,7 +26,7 @@ async function loadUser() {
   // 🔥 LEVEL UP MODAL KONTROLÜ
   if (user.level > previousLevel) {
 
-  if (user.level >= 7) {
+  if (user.level >= 20) {
     setTimeout(() => {
       startMatching();
     }, 800);
@@ -38,15 +38,7 @@ async function loadUser() {
 }
 
   // 🔓 MOD UNLOCK KONTROLÜ
-  if (user.level >= 5) {
-    const matchingBtn = document.getElementById("matchingBtn");
-    if (matchingBtn) matchingBtn.style.display = "block";
-  }
-
-  if (user.level >= 10) {
-    const voiceBtn = document.getElementById("voiceBtn");
-    if (voiceBtn) voiceBtn.style.display = "block";
-  }
+ 
 
   // XP BAR
   const xpInLevel = user.total_score % 30;
@@ -344,13 +336,46 @@ function dragOver(e) {
 
 function dropItem(e) {
   e.preventDefault();
+
   const draggedId = e.dataTransfer.getData("text/plain");
   const targetId = e.target.dataset.id;
 
+  const draggedElement = document.querySelector(
+    `.card-item[data-id='${draggedId}']`
+  );
+
+  const targetElement = e.target;
+
   if (draggedId === targetId) {
-    e.target.style.background = "#c8f7c5";
-    e.target.innerText = "✅ Doğru!";
+
+    // ✅ Animasyon ekle
+    draggedElement.classList.add("matched");
+    targetElement.classList.add("matched");
+
+    // 400ms sonra DOM’dan sil
+    setTimeout(() => {
+  draggedElement.remove();
+  targetElement.remove();
+
+  // ⭐ Eğer hiç kart kalmadıysa
+  const remaining = document.querySelectorAll(".card-item");
+  if (remaining.length === 0) {
+    setTimeout(() => {
+      alert("🎉 Eşleştirme turu tamamlandı!");
+      showScreen("game-screen");
+      loadWords();
+    }, 300);
+  }
+
+}, 400);
+
   } else {
-    e.target.style.background = "#f7c5c5";
+
+    // ❌ Yanlışsa küçük shake efekti verelim
+    targetElement.classList.add("wrong");
+
+    setTimeout(() => {
+      targetElement.classList.remove("wrong");
+    }, 300);
   }
 }
