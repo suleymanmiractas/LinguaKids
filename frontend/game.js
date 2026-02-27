@@ -26,7 +26,7 @@ async function loadUser() {
   // 🔥 LEVEL UP MODAL KONTROLÜ
   if (user.level > previousLevel) {
 
-  if (user.level >= 20) {
+  if (user.level >= 23) {
     setTimeout(() => {
       startMatching();
     }, 800);
@@ -38,7 +38,15 @@ async function loadUser() {
 }
 
   // 🔓 MOD UNLOCK KONTROLÜ
- 
+  if (user.level >= 5) {
+    const matchingBtn = document.getElementById("matchingBtn");
+    if (matchingBtn) matchingBtn.style.display = "block";
+  }
+
+  if (user.level >= 10) {
+    const voiceBtn = document.getElementById("voiceBtn");
+    if (voiceBtn) voiceBtn.style.display = "block";
+  }
 
   // XP BAR
   const xpInLevel = user.total_score % 30;
