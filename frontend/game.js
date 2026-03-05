@@ -26,7 +26,7 @@ async function loadUser() {
   // 🔥 LEVEL UP MODAL KONTROLÜ
   if (user.level > previousLevel) {
 
-  if (user.level >= 23) {
+  if (user.level >= 30) {
     setTimeout(() => {
       startMatching();
     }, 800);
