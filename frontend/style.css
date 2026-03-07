@@ -587,3 +587,13 @@ body.theme-light #game-screen {
     transform: scale(0.8);
   }
 }
+
+.matching-progress-text {
+  text-align: center;
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+#matching-screen .xp-container {
+  margin-bottom: 16px;
+}

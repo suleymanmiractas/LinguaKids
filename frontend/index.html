@@ -78,9 +78,19 @@
 
   <!-- MATCHING SCREEN -->
 <div id="matching-screen" class="screen">
-
   <div class="container">
     <h1>🧩 Eşleştirme Modu</h1>
+
+    <div class="top-bar">
+      <div class="info-box">⭐ Skor: <span id="matchingScoreText">0</span></div>
+      <div class="info-box">🏆 Level: <span id="matchingLevel">1</span></div>
+    </div>
+
+    <div class="xp-container">
+      <div class="xp-bar" id="matchingMainXpBar"></div>
+    </div>
+
+    
 
     <div class="matching-area">
       <div id="leftColumn" class="column"></div>
@@ -89,7 +99,6 @@
 
     <button onclick="showScreen('menu-screen')">⬅ Menü</button>
   </div>
-
 </div>
 
 <!-- LEVEL UP MODAL -->

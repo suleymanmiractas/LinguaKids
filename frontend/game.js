@@ -6,6 +6,8 @@ let currentWord = null;
 let streak = 0;
 let previousLevel = null;
 
+let matchingTotal = 3;
+let matchingCorrect = 0;
 /* =========================
    KULLANICI YÜKLE
 ========================= */
@@ -17,16 +19,23 @@ async function loadUser() {
   if (!user) return;
 
   const levelEl = document.getElementById("level");
-  const scoreEl = document.getElementById("score");
-  const xpBar = document.getElementById("xpBar");
+const scoreEl = document.getElementById("score");
+const xpBar = document.getElementById("xpBar");
 
-  levelEl.innerText = user.level;
-  scoreEl.innerText = user.total_score;
+const matchingLevelEl = document.getElementById("matchingLevel");
+const matchingScoreEl = document.getElementById("matchingScoreText");
+const matchingMainXpBar = document.getElementById("matchingMainXpBar");
+
+if (levelEl) levelEl.innerText = user.level;
+if (scoreEl) scoreEl.innerText = user.total_score;
+
+if (matchingLevelEl) matchingLevelEl.innerText = user.level;
+if (matchingScoreEl) matchingScoreEl.innerText = user.total_score;
 
   // 🔥 LEVEL UP MODAL KONTROLÜ
   if (user.level > previousLevel) {
 
-  if (user.level >= 30) {
+  if (user.level >= 57) {
     setTimeout(() => {
       startMatching();
     }, 800);
@@ -51,7 +60,9 @@ async function loadUser() {
   // XP BAR
   const xpInLevel = user.total_score % 30;
   const percent = (xpInLevel / 30) * 100;
-  xpBar.style.width = percent + "%";
+
+if (xpBar) xpBar.style.width = percent + "%";
+if (matchingMainXpBar) matchingMainXpBar.style.width = percent + "%";
 
   // LEVEL ANİMASYONU
   if (xpInLevel === 0 && user.total_score !== 0) {
@@ -308,6 +319,11 @@ async function loadMatchingWords() {
   left.innerHTML = "";
   right.innerHTML = "";
 
+  // matching bar reset
+  matchingTotal = data.length;
+  matchingCorrect = 0;
+  updateMatchingBar();
+
   const shuffled = [...data].sort(() => Math.random() - 0.5);
 
   data.forEach(word => {
@@ -324,7 +340,7 @@ async function loadMatchingWords() {
   shuffled.forEach(word => {
     const zone = document.createElement("div");
     zone.className = "drop-zone";
-    zone.innerText = word.word; // şimdilik aynı kelime kullanıyoruz
+    zone.innerText = word.word;
     zone.dataset.id = word.id;
 
     zone.addEventListener("dragover", dragOver);
@@ -338,11 +354,24 @@ function dragStart(e) {
   e.dataTransfer.setData("text/plain", e.target.dataset.id);
 }
 
+function updateMatchingBar() {
+  const bar = document.getElementById("matchingXpBar");
+  const scoreText = document.getElementById("matchingScore");
+
+  if (!bar || !scoreText) return;
+
+  const percent = matchingTotal > 0
+    ? (matchingCorrect / matchingTotal) * 100
+    : 0;
+
+  bar.style.width = percent + "%";
+  scoreText.innerText = matchingCorrect;
+}
 function dragOver(e) {
   e.preventDefault();
 }
 
-function dropItem(e) {
+async function dropItem(e) {
   e.preventDefault();
 
   const draggedId = e.dataTransfer.getData("text/plain");
@@ -355,31 +384,44 @@ function dropItem(e) {
   const targetElement = e.target;
 
   if (draggedId === targetId) {
+    // ✅ Matching progress bar artsın
+    matchingCorrect++;
+    updateMatchingBar();
 
-    // ✅ Animasyon ekle
+    // ✅ Her doğru eşleşmeye XP ver
+    const matchXP = 5;
+
+    await fetch(`${API_URL}/progress`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: USER_ID,
+        word_id: Number(draggedId),
+        is_correct: true,
+        xp: matchXP
+      })
+    });
+
+    // ✅ Genel level / xp bar da güncellensin
+    await loadUser();
+
     draggedElement.classList.add("matched");
     targetElement.classList.add("matched");
 
-    // 400ms sonra DOM’dan sil
     setTimeout(() => {
-  draggedElement.remove();
-  targetElement.remove();
+      draggedElement.remove();
+      targetElement.remove();
 
-  // ⭐ Eğer hiç kart kalmadıysa
-  const remaining = document.querySelectorAll(".card-item");
-  if (remaining.length === 0) {
-    setTimeout(() => {
-      alert("🎉 Eşleştirme turu tamamlandı!");
-      showScreen("game-screen");
-      loadWords();
-    }, 300);
-  }
-
-}, 400);
+      const remaining = document.querySelectorAll(".card-item");
+      if (remaining.length === 0) {
+        setTimeout(() => {
+          alert("🎉 Eşleştirme turu tamamlandı!");
+          loadMatchingWords();
+        }, 300);
+      }
+    }, 400);
 
   } else {
-
-    // ❌ Yanlışsa küçük shake efekti verelim
     targetElement.classList.add("wrong");
 
     setTimeout(() => {
