@@ -19,32 +19,32 @@ async function loadUser() {
   if (!user) return;
 
   const levelEl = document.getElementById("level");
-const scoreEl = document.getElementById("score");
-const xpBar = document.getElementById("xpBar");
+  const scoreEl = document.getElementById("score");
+  const xpBar = document.getElementById("xpBar");
 
-const matchingLevelEl = document.getElementById("matchingLevel");
-const matchingScoreEl = document.getElementById("matchingScoreText");
-const matchingMainXpBar = document.getElementById("matchingMainXpBar");
+  const matchingLevelEl = document.getElementById("matchingLevel");
+  const matchingScoreEl = document.getElementById("matchingScoreText");
+  const matchingMainXpBar = document.getElementById("matchingMainXpBar");
 
-if (levelEl) levelEl.innerText = user.level;
-if (scoreEl) scoreEl.innerText = user.total_score;
+  if (levelEl) levelEl.innerText = user.level;
+  if (scoreEl) scoreEl.innerText = user.total_score;
 
-if (matchingLevelEl) matchingLevelEl.innerText = user.level;
-if (matchingScoreEl) matchingScoreEl.innerText = user.total_score;
+  if (matchingLevelEl) matchingLevelEl.innerText = user.level;
+  if (matchingScoreEl) matchingScoreEl.innerText = user.total_score;
 
   // 🔥 LEVEL UP MODAL KONTROLÜ
   if (user.level > previousLevel) {
 
-  if (user.level >= 57) {
-    setTimeout(() => {
-      startMatching();
-    }, 800);
-  }
+    if (user.level >= 68) {
+      setTimeout(() => {
+        startMatching();
+      }, 800);
+    }
 
-  if (previousLevel === null) {
-  previousLevel = user.level;
-}
-}
+    if (previousLevel === null) {
+      previousLevel = user.level;
+    }
+  }
 
   // 🔓 MOD UNLOCK KONTROLÜ
   if (user.level >= 5) {
@@ -61,8 +61,8 @@ if (matchingScoreEl) matchingScoreEl.innerText = user.total_score;
   const xpInLevel = user.total_score % 30;
   const percent = (xpInLevel / 30) * 100;
 
-if (xpBar) xpBar.style.width = percent + "%";
-if (matchingMainXpBar) matchingMainXpBar.style.width = percent + "%";
+  if (xpBar) xpBar.style.width = percent + "%";
+  if (matchingMainXpBar) matchingMainXpBar.style.width = percent + "%";
 
   // LEVEL ANİMASYONU
   if (xpInLevel === 0 && user.total_score !== 0) {
@@ -121,16 +121,16 @@ function nextWord() {
 
   wordEl.innerText = maskWord(currentWord.word);
 
-const wordName = currentWord.word
-  .toLowerCase()
-  .replace(/\s+/g, "_");
+  const wordName = currentWord.word
+    .toLowerCase()
+    .replace(/\s+/g, "_");
 
-img.src = API_URL + "/assets/words/" + wordName + ".jpg";
+  img.src = API_URL + "/assets/words/" + wordName + ".jpg";
 
-img.onerror = function() {
-  img.onerror = null;
-  img.src = API_URL + "/assets/default.jpg";
-};
+  img.onerror = function () {
+    img.onerror = null;
+    img.src = API_URL + "/assets/default.jpg";
+  };
 }
 
 /* =========================
@@ -288,11 +288,11 @@ function showLevelUpModal(level) {
   }
 
   if (level === 5) {
-  setTimeout(() => {
-    closeLevelModal();
-    startMatching();
-  }, 2000);
-}
+    setTimeout(() => {
+      closeLevelModal();
+      startMatching();
+    }, 2000);
+  }
 
   message.innerText = `Level ${level} oldun!\n${unlockText}`;
   modal.style.display = "flex";
@@ -326,24 +326,27 @@ async function loadMatchingWords() {
 
   const shuffled = [...data].sort(() => Math.random() - 0.5);
 
-  data.forEach(word => {
+  data.forEach((word, index) => {
     const item = document.createElement("div");
     item.className = "card-item";
     item.innerText = word.word;
     item.draggable = true;
     item.dataset.id = word.id;
+    item.style.animationDelay = `${index * 0.1}s`; // Staggered intro
 
     item.addEventListener("dragstart", dragStart);
     left.appendChild(item);
   });
 
-  shuffled.forEach(word => {
+  shuffled.forEach((word, index) => {
     const zone = document.createElement("div");
     zone.className = "drop-zone";
     zone.innerText = word.word;
     zone.dataset.id = word.id;
+    zone.style.animationDelay = `${index * 0.1}s`; // Staggered intro
 
     zone.addEventListener("dragover", dragOver);
+    zone.addEventListener("dragleave", dragLeave);
     zone.addEventListener("drop", dropItem);
 
     right.appendChild(zone);
@@ -352,6 +355,10 @@ async function loadMatchingWords() {
 
 function dragStart(e) {
   e.dataTransfer.setData("text/plain", e.target.dataset.id);
+}
+
+function dragLeave(e) {
+  e.target.classList.remove("hover");
 }
 
 function updateMatchingBar() {
@@ -369,10 +376,12 @@ function updateMatchingBar() {
 }
 function dragOver(e) {
   e.preventDefault();
+  e.target.classList.add("hover");
 }
 
 async function dropItem(e) {
   e.preventDefault();
+  e.target.classList.remove("hover");
 
   const draggedId = e.dataTransfer.getData("text/plain");
   const targetId = e.target.dataset.id;
@@ -419,7 +428,7 @@ async function dropItem(e) {
           loadMatchingWords();
         }, 300);
       }
-    }, 400);
+    }, 800); // Animasyon süresi kadar bekle
 
   } else {
     targetElement.classList.add("wrong");
