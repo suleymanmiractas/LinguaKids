@@ -8,6 +8,22 @@ let previousLevel = null;
 
 let matchingTotal = 3;
 let matchingCorrect = 0;
+
+/* =========================
+   KELİME ÇEVİRİ SÖZLÜĞÜ
+========================= */
+const TURKISH_DICT = {
+  "apple": "Elma",
+  "cat": "Kedi",
+  "dog": "Köpek",
+  "house": "Ev",
+  "banana": "Muz",
+  "orange": "Portakal",
+  "grape": "Üzüm",
+  "pineapple": "Ananas",
+  "elephant": "Fil"
+};
+
 /* =========================
    KULLANICI YÜKLE
 ========================= */
@@ -26,16 +42,27 @@ async function loadUser() {
   const matchingScoreEl = document.getElementById("matchingScoreText");
   const matchingMainXpBar = document.getElementById("matchingMainXpBar");
 
+  const voiceLevelEl = document.getElementById("voiceLevel");
+  const voiceScoreEl = document.getElementById("voiceScoreText");
+  const voiceMainXpBar = document.getElementById("voiceMainXpBar");
+
   if (levelEl) levelEl.innerText = user.level;
   if (scoreEl) scoreEl.innerText = user.total_score;
 
   if (matchingLevelEl) matchingLevelEl.innerText = user.level;
   if (matchingScoreEl) matchingScoreEl.innerText = user.total_score;
 
+  if (voiceLevelEl) voiceLevelEl.innerText = user.level;
+  if (voiceScoreEl) voiceScoreEl.innerText = user.total_score;
+
   // 🔥 LEVEL UP MODAL KONTROLÜ
   if (user.level > previousLevel) {
 
-    if (user.level >= 68) {
+    if (user.level >= 113) {
+      setTimeout(() => {
+        startVoiceMode();
+      }, 800);
+    } else if (user.level >= 112) {
       setTimeout(() => {
         startMatching();
       }, 800);
@@ -47,12 +74,12 @@ async function loadUser() {
   }
 
   // 🔓 MOD UNLOCK KONTROLÜ
-  if (user.level >= 5) {
+  if (user.level >= 112) {
     const matchingBtn = document.getElementById("matchingBtn");
     if (matchingBtn) matchingBtn.style.display = "block";
   }
 
-  if (user.level >= 10) {
+  if (user.level >= 113) {
     const voiceBtn = document.getElementById("voiceBtn");
     if (voiceBtn) voiceBtn.style.display = "block";
   }
@@ -63,6 +90,7 @@ async function loadUser() {
 
   if (xpBar) xpBar.style.width = percent + "%";
   if (matchingMainXpBar) matchingMainXpBar.style.width = percent + "%";
+  if (voiceMainXpBar) voiceMainXpBar.style.width = percent + "%";
 
   // LEVEL ANİMASYONU
   if (xpInLevel === 0 && user.total_score !== 0) {
@@ -254,6 +282,10 @@ window.startGame = startGame;
 window.openSettings = openSettings;
 window.restartGame = restartGame;
 window.setTheme = setTheme;
+window.startMatching = startMatching;
+window.startVoiceMode = startVoiceMode;
+window.startListening = startListening;
+window.playWordAudio = playWordAudio;
 
 /* =========================
    İLK YÜKLEME
@@ -279,15 +311,20 @@ function showLevelUpModal(level) {
 
   let unlockText = "";
 
-  if (level >= 10) {
+  if (level === 113) {
     unlockText = "🎤 Yeni mod açıldı: SESLİ KOMUT!";
-  } else if (level >= 5) {
+  } else if (level === 112) {
     unlockText = "🧩 Yeni mod açıldı: EŞLEŞTİRME!";
   } else {
     unlockText = "Harika gidiyorsun!";
   }
 
-  if (level === 5) {
+  if (level === 113) {
+    setTimeout(() => {
+      closeLevelModal();
+      startVoiceMode();
+    }, 2000);
+  } else if (level === 112) {
     setTimeout(() => {
       closeLevelModal();
       startMatching();
@@ -341,7 +378,12 @@ async function loadMatchingWords() {
   shuffled.forEach((word, index) => {
     const zone = document.createElement("div");
     zone.className = "drop-zone";
-    zone.innerText = word.word;
+
+    // Turkish translation fallback
+    const engWord = word.word.toLowerCase();
+    const trWord = TURKISH_DICT[engWord] || word.word;
+
+    zone.innerText = trWord;
     zone.dataset.id = word.id;
     zone.style.animationDelay = `${index * 0.1}s`; // Staggered intro
 
@@ -437,4 +479,208 @@ async function dropItem(e) {
       targetElement.classList.remove("wrong");
     }, 300);
   }
+}
+
+/* =========================
+   SESLİ KOMUT (VOICE) MODU (Cümle Pratiği)
+========================= */
+const VOICE_SENTENCES = [
+  { id: 101, text: "I like apples" },
+  { id: 102, text: "She has a cat" },
+  { id: 103, text: "The dog is big" },
+  { id: 104, text: "We go to school" },
+  { id: 105, text: "It is a sunny day" },
+  { id: 106, text: "He plays football" },
+  { id: 107, text: "My house is blue" },
+  { id: 108, text: "I drink water" },
+  { id: 109, text: "They are my friends" },
+  { id: 110, text: "Can you help me" }
+];
+
+let voiceSentenceData = null;
+
+function startVoiceMode() {
+  showScreen("voice-screen");
+  loadVoiceSentence();
+}
+
+async function loadVoiceSentence() {
+  const wordEl = document.getElementById("voiceWord");
+  const feedbackEl = document.getElementById("voiceFeedback");
+  const micStatus = document.getElementById("micStatus");
+  const transcriptEl = document.getElementById("liveTranscript");
+  const transcriptBox = document.getElementById("transcriptBox");
+
+  feedbackEl.innerText = "";
+  feedbackEl.className = "";
+  micStatus.innerText = "Söylemek için tıklayın";
+
+  if (transcriptEl && transcriptBox) {
+    transcriptEl.innerText = "Sen konuşurken söylediklerin burada belirecek...";
+    transcriptEl.className = "placeholder";
+    transcriptBox.classList.remove("active");
+  }
+
+  const randomIndex = Math.floor(Math.random() * VOICE_SENTENCES.length);
+  voiceSentenceData = VOICE_SENTENCES[randomIndex];
+
+  wordEl.innerText = voiceSentenceData.text;
+}
+
+// Ses listesini önyükleme (Windows/Chrome bazen gecikmeli yükler)
+let synthVoices = [];
+window.speechSynthesis.onvoiceschanged = () => {
+  synthVoices = window.speechSynthesis.getVoices();
+};
+
+function playWordAudio() {
+  if (!voiceSentenceData) return;
+  const utterance = new SpeechSynthesisUtterance(voiceSentenceData.text);
+  utterance.lang = "en-US";
+
+  if (synthVoices.length === 0) {
+    synthVoices = window.speechSynthesis.getVoices();
+  }
+
+  // En iyi İngilizce sesi bulmaya çalış (Windows'ta Zira/David, Mac'te Samantha vb.)
+  let bestVoice = synthVoices.find(v => v.lang === "en-US" && (v.name.includes("Google") || v.name.includes("Zira") || v.name.includes("Samantha")));
+
+  if (!bestVoice) {
+    bestVoice = synthVoices.find(v => v.lang.startsWith("en-"));
+  }
+
+  if (bestVoice) {
+    utterance.voice = bestVoice;
+  }
+
+  utterance.rate = 0.85; // Çocuklar için daha yavaş ve net
+  utterance.pitch = 1.1;
+  window.speechSynthesis.speak(utterance);
+}
+
+function cleanPunctuation(str) {
+  return str.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").trim();
+}
+
+function startListening() {
+  if (!voiceSentenceData) return;
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    alert("Tarayıcınız ses tanıma özelliğini desteklemiyor. Lütfen Chrome vb. bir tarayıcı kullanın.");
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = "en-US";
+
+  // Localhost ve HTTP üzerinde continuous=true genellikle sessizce çöker veya bloke olur.
+  // Bu yüzden sadece interimResults istiyoruz.
+  recognition.interimResults = true;
+  recognition.continuous = false;
+  recognition.maxAlternatives = 1;
+
+  const micBtn = document.getElementById("micBtn");
+  const micStatus = document.getElementById("micStatus");
+  const feedbackEl = document.getElementById("voiceFeedback");
+  const transcriptEl = document.getElementById("liveTranscript");
+  const transcriptBox = document.getElementById("transcriptBox");
+
+  let finalTranscript = "";
+  let lastInterimTranscript = "";
+
+  recognition.onstart = function () {
+    micBtn.classList.add("listening");
+    micBtn.classList.add("active-click");
+    setTimeout(() => micBtn.classList.remove("active-click"), 200);
+
+    micStatus.innerText = "Dinleniyor, lütfen tek seferde konuşun...";
+    feedbackEl.innerText = "";
+
+    transcriptEl.innerText = "...";
+    transcriptEl.className = "";
+    transcriptBox.classList.add("active");
+  };
+
+  recognition.onresult = function (event) {
+    let interimTranscript = "";
+
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      if (event.results[i].isFinal) {
+        finalTranscript += event.results[i][0].transcript;
+      } else {
+        interimTranscript += event.results[i][0].transcript;
+      }
+    }
+
+    // Interim transcript'i yedek olarak sakla
+    if (interimTranscript.trim() !== "") {
+      lastInterimTranscript = interimTranscript;
+    }
+
+    const displayTranscript = finalTranscript || interimTranscript;
+    if (displayTranscript && displayTranscript.trim() !== "") {
+      transcriptEl.innerText = displayTranscript;
+    }
+  };
+
+  recognition.onend = async function () {
+    micBtn.classList.remove("listening");
+    micStatus.innerText = "Söylemek için tıklayın";
+
+    // finalTranscript yoksa interim'i kullan (bazı tarayıcılarda isFinal gelmez)
+    if (!finalTranscript && lastInterimTranscript) {
+      finalTranscript = lastInterimTranscript;
+    }
+
+    // Once recognition ends, analyze the final transcript
+    if (!finalTranscript || finalTranscript.trim() === "") {
+      transcriptBox.classList.remove("active");
+      return; // Kullanıcı hiç konuşmadı
+    }
+
+    const userSpokenText = cleanPunctuation(finalTranscript);
+    const targetText = cleanPunctuation(voiceSentenceData.text);
+
+    if (userSpokenText === targetText) {
+      feedbackEl.innerText = "🎉 Mükemmel! Çok iyi okudun!";
+      feedbackEl.className = "correct";
+
+      await fetch(`${API_URL}/progress`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: USER_ID,
+          word_id: voiceSentenceData.id,
+          is_correct: true,
+          xp: 15 // More XP for sentences
+        })
+      });
+
+      await loadUser();
+
+      setTimeout(() => {
+        loadVoiceSentence();
+      }, 2500);
+
+    } else {
+      feedbackEl.innerText = `❌ Olmadı, tekrar deneyelim.`;
+      feedbackEl.className = "wrong";
+    }
+  };
+
+  recognition.onerror = function (event) {
+    if (event.error === 'not-allowed') {
+      micStatus.innerText = "❌ Mikrofon izni reddedildi.";
+    } else if (event.error === 'no-speech') {
+      micStatus.innerText = "Ses algılanmadı.";
+    } else {
+      micStatus.innerText = "Söylediğin anlaşılamadı, tekrar dene.";
+    }
+    micBtn.classList.remove("listening");
+    transcriptBox.classList.remove("active");
+  };
+
+  recognition.start();
 }

@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
   <meta charset="UTF-8" />
   <title>LinguaKids</title>
   <link rel="stylesheet" href="style.css" />
 
- 
+
 </head>
+
 <body>
 
   <!-- HOŞ GELDİNİZ EKRANI -->
@@ -18,21 +20,20 @@
   <!-- MENÜ EKRANI -->
   <div id="menu-screen" class="screen bg-welcome">
     <h2>Menü</h2>
-    <button onclick="startGame()">▶ Oyna</button>
-    <button id="matchingBtn" style="display:none;" onclick="startMatching()">
-    🧩 Eşleştirme
-  </button>
-    <button id="matchingBtn" style="display:none;">🧩 Eşleştirme</button>
-    <button id="voiceBtn" style="display:none;">🎤 Sesli Komut</button>
-    <button onclick="openSettings()">⚙ Ayarlar</button>
+    <div class="menu-buttons">
+      <button onclick="startGame()">▶ Oyna</button>
+      <button id="matchingBtn" style="display:none;" onclick="startMatching()">🧩 Eşleştirme</button>
+      <button id="voiceBtn" style="display:none;" onclick="startVoiceMode()">🎤 Sesli Komut</button>
+      <button onclick="openSettings()">⚙ Ayarlar</button>
+    </div>
   </div>
 
   <!-- OYUN EKRANI (MEVCUT UYGULAMAN) -->
   <div id="game-screen" class="screen">
     <div class="animated-bg">
-     <span></span>
-     <span></span>
-     <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
     </div>
 
     <div class="container">
@@ -50,7 +51,7 @@
       </div>
 
       <div class="xp-container">
-       <div class="xp-bar" id="xpBar"></div>
+        <div class="xp-bar" id="xpBar"></div>
       </div>
 
       <div id="game-box" class="card">
@@ -62,51 +63,103 @@
       </div>
 
       <div class="input-area">
-       <input type="text" id="answerInput" placeholder="Cevabı yaz..." />
-       <button type="button" id="submitBtn">Tamam</button>
+        <input type="text" id="answerInput" placeholder="Cevabı yaz..." />
+        <button type="button" id="submitBtn">Tamam</button>
       </div>
 
 
       <button id="restartBtn" onclick="restartGame()" style="display:none;">
         🔁 Yeni Tur Başla
       </button>
+      <button onclick="showScreen('menu-screen')"
+        style="margin-top:10px; width:100%; padding:10px; font-size:15px; font-weight:700; border-radius:14px; border:none; background:rgba(255,255,255,0.85); color:#333; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.1);">⬅
+        Ana Menüye Dön</button>
     </div>
 
+  </div>
+
+
+  <!-- MATCHING SCREEN -->
+  <div id="matching-screen" class="screen">
+    <div class="container">
+      <h1>🧩 Eşleştirme Modu</h1>
+
+      <div class="top-bar">
+        <div class="info-box">⭐ Skor: <span id="matchingScoreText">0</span></div>
+        <div class="info-box">🏆 Level: <span id="matchingLevel">1</span></div>
+      </div>
+
+      <div class="xp-container">
+        <div class="xp-bar" id="matchingMainXpBar"></div>
+      </div>
+
+      <div class="matching-area">
+        <div id="leftColumn" class="column"></div>
+        <div id="rightColumn" class="column"></div>
+      </div>
+
+      <button onclick="showScreen('menu-screen')">⬅ Menü</button>
+    </div>
+  </div>
+
+  <!-- VOICE SCREEN -->
+  <div id="voice-screen" class="screen">
+    <div class="container" style="padding: 14px 14px;">
+      <h1>LinguaKids 🎮</h1>
+      <h2
+        style="font-size: 20px; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); text-align: center; margin-bottom: 15px;">
+        🎤 Telaffuz Pratiği</h2>
+
+      <div class="top-bar" style="margin-bottom: 8px;">
+        <div class="info-box">⭐ Skor: <span id="voiceScoreText">0</span></div>
+        <div class="info-box">🏆 Level: <span id="voiceLevel">1</span></div>
+      </div>
+
+      <div class="xp-container" style="margin-bottom: 12px;">
+        <div class="xp-bar" id="voiceMainXpBar"></div>
+      </div>
+
+      <div id="voice-game-box" class="card" style="text-align: center; padding: 16px 16px;">
+
+        <p style="font-size: 13px; font-weight: bold; color: #666; margin-bottom: 6px;">Okuman Gereken Cümle:</p>
+        <h2 id="voiceWord"
+          style="margin-top: 0; margin-bottom: 8px; font-size: 22px; color: #1e3c72; line-height: 1.3;">Cümle
+          yükleniyor...</h2>
+
+        <button onclick="playWordAudio()"
+          style="margin: 8px auto 12px; padding: 8px 16px; border-radius: 16px; border: none; background: linear-gradient(135deg, #a1c4fd, #c2e9fb); font-weight: 800; font-size: 14px; color: #1565c0; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.2s;">
+          🔊 Sesli Dinle
+        </button>
+
+        <div class="transcript-box" id="transcriptBox">
+          <p id="liveTranscript" class="placeholder">Sen konuşurken söylediklerin burada belirecek...</p>
+        </div>
+
+        <button id="micBtn" class="mic-button" onclick="startListening()" style="margin-top: 14px;">
+          <span class="mic-icon">🎤</span>
+        </button>
+        <p id="micStatus" style="font-size: 13px; font-weight: bold; color: #555; margin-top: 6px;">Konuşmak için
+          tıklayın</p>
+
+        <p id="voiceFeedback" style="font-size: 18px; font-weight: bold; margin-top: 15px; min-height: 22px;"></p>
+      </div>
+
+      <button onclick="showScreen('menu-screen')"
+        style="width: 100%; margin-top: 20px; padding: 14px; font-size: 16px; font-weight: 800; border-radius: 16px; border: none; background: rgba(255,255,255,0.9); color: #333; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">⬅
+        Ana Menüye Dön</button>
+    </div>
+  </div>
+
+  <!-- LEVEL UP MODAL -->
+  <div id="levelModal" class="modal">
+    <div class="modal-content">
+      <h2 id="levelTitle">🎉 Level Up!</h2>
+      <p id="levelMessage"></p>
+      <button onclick="closeLevelModal()">Tamam</button>
+    </div>
   </div>
 
   <script src="game.js"></script>
-
-  <!-- MATCHING SCREEN -->
-<div id="matching-screen" class="screen">
-  <div class="container">
-    <h1>🧩 Eşleştirme Modu</h1>
-
-    <div class="top-bar">
-      <div class="info-box">⭐ Skor: <span id="matchingScoreText">0</span></div>
-      <div class="info-box">🏆 Level: <span id="matchingLevel">1</span></div>
-    </div>
-
-    <div class="xp-container">
-      <div class="xp-bar" id="matchingMainXpBar"></div>
-    </div>
-
-    <div class="matching-area">
-      <div id="leftColumn" class="column"></div>
-      <div id="rightColumn" class="column"></div>
-    </div>
-
-    <button onclick="showScreen('menu-screen')">⬅ Menü</button>
-  </div>
-</div>
-
-<!-- LEVEL UP MODAL -->
-<div id="levelModal" class="modal">
-  <div class="modal-content">
-    <h2 id="levelTitle">🎉 Level Up!</h2>
-    <p id="levelMessage"></p>
-    <button onclick="closeLevelModal()">Tamam</button>
-  </div>
-</div>
 </body>
 
 </html>
