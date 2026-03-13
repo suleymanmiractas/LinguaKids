@@ -6,6 +6,11 @@ let currentWord = null;
 let streak = 0;
 let previousLevel = null;
 
+let soundEnabled = localStorage.getItem("soundEnabled") !== "false";
+let musicEnabled = localStorage.getItem("musicEnabled") !== "false";
+let musicStarted = false;
+let musicInterval = null;
+
 let matchingTotal = 3;
 let matchingCorrect = 0;
 
@@ -58,13 +63,14 @@ async function loadUser() {
   // 🔥 LEVEL UP MODAL KONTROLÜ
   if (user.level > previousLevel) {
 
-    if (user.level >= 113) {
-      setTimeout(() => {
-        startVoiceMode();
-      }, 800);
-    } else if (user.level >= 112) {
+    // Level 131: Force Matching, Level 132: Force Voice. Above 133, let user choose.
+    if (user.level === 131) {
       setTimeout(() => {
         startMatching();
+      }, 800);
+    } else if (user.level === 132) {
+      setTimeout(() => {
+        startVoiceMode();
       }, 800);
     }
 
@@ -162,6 +168,159 @@ function nextWord() {
 }
 
 /* =========================
+   SES SİSTEMİ (Web Audio API)
+   ========================= */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(type) {
+  if (!soundEnabled) return;
+  const now = audioCtx.currentTime;
+
+  if (type === "correct") {
+    // Gamey "Sparkle"
+    [880, 1109, 1320].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = "sine";
+      osc.connect(g);
+      g.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(freq, now + i * 0.05);
+      g.gain.setValueAtTime(0.1, now + i * 0.05);
+      g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.05 + 0.2);
+      osc.start(now + i * 0.05);
+      osc.stop(now + i * 0.05 + 0.2);
+    });
+  } else if (type === "wrong") {
+    // Heavy "Thud"
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = "square";
+    osc.connect(g);
+    g.connect(audioCtx.destination);
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(40, now + 0.2);
+    g.gain.setValueAtTime(0.1, now);
+    g.gain.linearRampToValueAtTime(0, now + 0.3);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  } else if (type === "levelup") {
+    // Victory Arpeggio
+    const scale = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+    scale.forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = "triangle";
+      osc.connect(g);
+      g.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(freq, now + i * 0.1);
+      g.gain.setValueAtTime(0.1, now + i * 0.1);
+      g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.4);
+      osc.start(now + i * 0.1);
+      osc.stop(now + i * 0.1 + 0.5);
+    });
+  }
+}
+
+/* =========================
+   LO-FI HIP HOP MÜZİK MOTORU (Lazy Sunday Vibe)
+   ========================= */
+let musicTimeouts = [];
+
+function startMusic() {
+  if (musicStarted || !musicEnabled) return;
+  musicStarted = true;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  // 1. Vinyl Crackle (Constant Noise)
+  const crackleNode = audioCtx.createGain();
+  crackleNode.gain.setValueAtTime(0.005, audioCtx.currentTime);
+  crackleNode.connect(audioCtx.destination);
+  
+  const bufferSize = 2 * audioCtx.sampleRate,
+        buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate),
+        output = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    output[i] = Math.random() * 2 - 1;
+  }
+  const whiteNoise = audioCtx.createBufferSource();
+  whiteNoise.buffer = buffer;
+  whiteNoise.loop = true;
+  whiteNoise.connect(crackleNode);
+  whiteNoise.start();
+  musicTimeouts.push(whiteNoise);
+
+  // 2. Music Loop (80 BPM)
+  let step = 0;
+  const chords = [
+    [261.63, 329.63, 392.00, 493.88], // CMaj7
+    [220.00, 261.63, 329.63, 392.00], // Am7
+    [293.66, 349.23, 440.00, 523.25], // Dm7
+    [196.00, 246.94, 293.66, 349.23]  // G7
+  ];
+
+  musicInterval = setInterval(() => {
+    if (!musicEnabled) return;
+    const now = audioCtx.currentTime;
+    
+    // Beat: Kick on 1 & 3, Snare on 2 & 4
+    if (step % 4 === 0) { // Kick
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.connect(g); g.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(120, now);
+      osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+      g.gain.setValueAtTime(0.05, now);
+      g.gain.linearRampToValueAtTime(0, now + 0.15);
+      osc.start(); osc.stop(now + 0.15);
+    }
+    if (step % 4 === 2) { // Snare
+      const g = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = "highpass"; filter.frequency.value = 1000;
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      noise.connect(filter); filter.connect(g); g.connect(audioCtx.destination);
+      g.gain.setValueAtTime(0.03, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      noise.start(); noise.stop(now + 0.1);
+    }
+    
+    // Jazzy Chord on 1
+    if (step % 8 === 0) {
+      const chord = chords[(step / 8) % chords.length];
+      chord.forEach(freq => {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = "triangle";
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(freq, now);
+        g.gain.setValueAtTime(0.015, now);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 2.5);
+        osc.start(); osc.stop(now + 2.5);
+      });
+    }
+
+    step++;
+  }, 375); // 80 BPM (60000 / 80 / 2) - eighth notes
+}
+
+function stopMusic() {
+  if (musicInterval) clearInterval(musicInterval);
+  musicTimeouts.forEach(src => {
+    try { src.stop(); } catch(e) {}
+  });
+  musicTimeouts = [];
+  musicInterval = null;
+  musicStarted = false;
+}
+
+// Browser requires interaction to start Audio
+document.addEventListener("click", () => {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  startMusic();
+}, { once: false });
+
+/* =========================
    CEVAP KONTROL
 ========================= */
 async function checkAnswer() {
@@ -184,6 +343,7 @@ async function checkAnswer() {
 
     feedback.innerText = `🎉 Doğru! +${bonusXP} XP 🔥 x${streak}`;
     wordEl.classList.add("correct");
+    playSound("correct");
 
     await fetch(`${API_URL}/progress`, {
       method: "POST",
@@ -210,6 +370,7 @@ async function checkAnswer() {
 
     feedback.innerText = "❌ Yanlış! Streak sıfırlandı.";
     wordEl.classList.add("wrong");
+    playSound("wrong");
 
     setTimeout(() => {
       wordEl.classList.remove("wrong");
@@ -246,6 +407,12 @@ async function restartGame() {
 function setTheme(theme) {
   document.body.className = `theme-${theme}`;
   localStorage.setItem("theme", theme);
+  
+  // Highlight active button
+  document.querySelectorAll(".theme-switcher button").forEach(btn => {
+    const isThisTheme = btn.getAttribute("onclick").includes(`'${theme}'`);
+    btn.classList.toggle("active", isThisTheme);
+  });
 }
 
 const savedTheme = localStorage.getItem("theme");
@@ -272,7 +439,36 @@ function startGame() {
 }
 
 function openSettings() {
-  alert("Ayarlar yakında 👑");
+  document.getElementById("settingsModal").style.display = "flex";
+  document.getElementById("soundToggle").checked = soundEnabled;
+  document.getElementById("musicToggle").checked = musicEnabled;
+  
+  // Set active theme button highlight
+  const currentTheme = localStorage.getItem("theme") || "light";
+  document.querySelectorAll(".theme-switcher button").forEach(btn => {
+    const isThisTheme = btn.getAttribute("onclick").includes(`'${currentTheme}'`);
+    btn.classList.toggle("active", isThisTheme);
+  });
+}
+
+function closeSettings() {
+  document.getElementById("settingsModal").style.display = "none";
+}
+
+function toggleSound() {
+  soundEnabled = document.getElementById("soundToggle").checked;
+  localStorage.setItem("soundEnabled", soundEnabled);
+  if (soundEnabled) playSound("correct"); // Test sound
+}
+
+function toggleMusic() {
+  musicEnabled = document.getElementById("musicToggle").checked;
+  localStorage.setItem("musicEnabled", musicEnabled);
+  if (musicEnabled) {
+    if (!musicStarted) startMusic();
+  } else {
+    stopMusic();
+  }
 }
 
 /* =========================
@@ -333,6 +529,7 @@ function showLevelUpModal(level) {
 
   message.innerText = `Level ${level} oldun!\n${unlockText}`;
   modal.style.display = "flex";
+  playSound("levelup");
 }
 
 function closeLevelModal() {
@@ -346,7 +543,7 @@ function startMatching() {
 
 async function loadMatchingWords() {
   const res = await fetch(
-    `${API_URL}/words/random?user_id=${USER_ID}&limit=3`
+    `${API_URL}/words/random?user_id=${USER_ID}&limit=4`
   );
   const data = await res.json();
 
@@ -438,6 +635,7 @@ async function dropItem(e) {
     // ✅ Matching progress bar artsın
     matchingCorrect++;
     updateMatchingBar();
+    playSound("correct");
 
     // ✅ Her doğru eşleşmeye XP ver
     const matchXP = 5;
@@ -466,14 +664,14 @@ async function dropItem(e) {
       const remaining = document.querySelectorAll(".card-item");
       if (remaining.length === 0) {
         setTimeout(() => {
-          alert("🎉 Eşleştirme turu tamamlandı!");
           loadMatchingWords();
-        }, 300);
+        }, 500);
       }
     }, 800); // Animasyon süresi kadar bekle
 
   } else {
     targetElement.classList.add("wrong");
+    playSound("wrong");
 
     setTimeout(() => {
       targetElement.classList.remove("wrong");
@@ -646,6 +844,7 @@ function startListening() {
     if (userSpokenText === targetText) {
       feedbackEl.innerText = "🎉 Mükemmel! Çok iyi okudun!";
       feedbackEl.className = "correct";
+      playSound("correct");
 
       await fetch(`${API_URL}/progress`, {
         method: "POST",
@@ -667,6 +866,7 @@ function startListening() {
     } else {
       feedbackEl.innerText = `❌ Olmadı, tekrar deneyelim.`;
       feedbackEl.className = "wrong";
+      playSound("wrong");
     }
   };
 
